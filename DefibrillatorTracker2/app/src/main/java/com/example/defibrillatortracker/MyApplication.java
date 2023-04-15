@@ -20,7 +20,7 @@ public class MyApplication extends Application {
         return myLocations;
     }
 
-    public static MyApplication getInstance() {
+    public MyApplication getInstance() {
         return singleton;
     }
 
@@ -30,5 +30,4 @@ public class MyApplication extends Application {
         myLocations = new ArrayList<>();
     }
 
-    }
-
+}
