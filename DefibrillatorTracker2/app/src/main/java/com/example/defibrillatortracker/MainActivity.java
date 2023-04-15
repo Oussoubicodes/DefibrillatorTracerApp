@@ -234,7 +234,7 @@ public class MainActivity extends AppCompatActivity {
         MyApplication myApplication = (MyApplication)getApplicationContext();
         savedLocations = myApplication.getMyLocations();
 
-        //show Number of Defibs saved
+        //show Number of Defibs(Defibrillators) saved
         tv_noDefibs.setText(Integer.toString(savedLocations.size()));
 
 
