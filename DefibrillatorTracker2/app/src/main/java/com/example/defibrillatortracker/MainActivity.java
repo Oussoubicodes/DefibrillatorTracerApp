@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
 
     Button btn_newLocation,btn_showLocations;
 
-//API's for location service. Majority of features in app use this
+    //API's for location service. Majority of features in app use this
     FusedLocationProviderClient fusedLocationProviderClient;
 
     //variable to see if we are tracking location or not
@@ -141,7 +141,8 @@ public class MainActivity extends AppCompatActivity {
     private void startLocationUpdates() {
         tv_updates.setText("Location is being tracked");
         LocationServices.getFusedLocationProviderClient(getApplicationContext())
-                .requestLocationUpdates(locationRequest,locationCallBack,null);
+                .requestLocationUpdates(locationRequest,locationCallBack, null);
+        updateGPS();
     }
 
     private void stopLocationUpdates() {
@@ -176,13 +177,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateGPS() {
-            //Get permissions from the user to track GPS
-            //Get the current location from the fused client
-            //update the UI - set all properties in their associated text view items.
+        //Get permissions from the user to track GPS
+        //Get the current location from the fused client
+        //update the UI - set all properties in their associated text view items.
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(MainActivity.this);
         if(ActivityCompat.checkSelfPermission(this,Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED){
-           //user has permisson
+            //user has permisson
             fusedLocationProviderClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
                 @Override
                 public void onSuccess(Location location) {
@@ -192,7 +193,7 @@ public class MainActivity extends AppCompatActivity {
 
                 }
             });
-            } else {
+        } else {
             if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
                 requestPermissions(new String[] { Manifest.permission.ACCESS_FINE_LOCATION},PERMISSIONS_FINE_LOCATION);
             }
