@@ -4,32 +4,42 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest.Builder;
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.Priority;
 import com.google.android.gms.tasks.OnSuccessListener;
 
+import java.util.List;
+
 public class MainActivity extends AppCompatActivity {
 
-    public static final int DEFAULT_UPDATE_INTERVAL = 30;
-    public static final int FAST_UPDATE_INTERVAL = 5;
+    private static final int DEFAULT_UPDATE_INTERVAL = 30;
+    private static final int FAST_UPDATE_INTERVAL = 5;
     private static final int PERMISSIONS_FINE_LOCATION = 99;
 
-    TextView tv_lat,tv_lon,tv_altitude,tv_accuracy,tv_speed,tv_sensor,tv_address,tv_updates;
+    TextView tv_lat,tv_lon,tv_altitude,tv_accuracy,tv_speed,tv_sensor,tv_address,tv_updates,tv_noDefibs;
 
     Switch sw_locationupdates, sw_gps;
+
+    Button btn_newLocation,btn_showLocations;
 
 //API's for location service. Majority of features in app use this
     FusedLocationProviderClient fusedLocationProviderClient;
@@ -37,9 +47,17 @@ public class MainActivity extends AppCompatActivity {
     //variable to see if we are tracking location or not
     boolean updateOn = false;
 
+    //currentLocation
+    Location currentLocation;
+
+    //list of saved locations
+    List<Location> savedLocations;
+
     //Location request is a config file for all setting to FusedLocationProvider
 
     Builder locationRequest;
+
+    LocationCallback locationCallBack;
 
 
     @SuppressLint("SetTextI18n")
@@ -58,6 +76,9 @@ public class MainActivity extends AppCompatActivity {
         tv_updates = findViewById(R.id.tv_updates);
         sw_locationupdates = findViewById(R.id.sw_locationsupdates);
         sw_gps = findViewById(R.id.sw_gps);
+        btn_newLocation = findViewById(R.id.saveLocation);
+        btn_showLocations = findViewById(R.id.showLocations);
+        tv_noDefibs = findViewById(R.id.noDefibs);
 
         //set all properties of LocationRequest
 
@@ -66,6 +87,30 @@ public class MainActivity extends AppCompatActivity {
 
         //Checks every 10000ms when set to the most frequent update
         locationRequest.setMinUpdateIntervalMillis(1000 * FAST_UPDATE_INTERVAL);
+
+        //Triggered whenever location update interval is met
+        locationCallBack = new LocationCallback() {
+            @Override
+            public void onLocationResult(@NonNull LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+
+                updateUIValues(locationResult.getLastLocation());
+            }
+        };
+
+        btn_newLocation.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // get the gps location
+                MyApplication myApplication = (MyApplication)getApplicationContext();
+                savedLocations = myApplication.getMyLocations();
+                savedLocations.add(currentLocation);
+
+            }
+        });
+        {
+
+        }
 
         sw_gps.setOnClickListener(view -> {
             if (sw_gps.isChecked()) {
@@ -77,9 +122,42 @@ public class MainActivity extends AppCompatActivity {
                 tv_sensor.setText("Using Towers + WIFI");
             }
 
+
+            sw_locationupdates.setOnClickListener((new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if(sw_locationupdates.isChecked()){
+                        startLocationUpdates();
+                    } else {
+                        stopLocationUpdates();
+                    }
+                }
+            }));
+
             updateGPS();
         });
     }
+
+    private void startLocationUpdates() {
+        tv_updates.setText("Location is being tracked");
+        LocationServices.getFusedLocationProviderClient(getApplicationContext())
+                .requestLocationUpdates(locationRequest,locationCallBack,null);
+    }
+
+    private void stopLocationUpdates() {
+        tv_updates.setText("Location is NOT being tracked");
+        tv_lat.setText("Location is NOT being tracked");
+        tv_lon.setText("Location is NOT being tracked");
+        tv_speed.setText("Location is NOT being tracked");
+        tv_accuracy.setText("Location is NOT being tracked");
+        tv_address.setText("Location is NOT being tracked");
+        tv_sensor.setText("Location is NOT being tracked");
+        tv_altitude.setText("Location is NOT being tracked");
+
+        fusedLocationProviderClient.removeLocationUpdates(locationCallBack);
+
+    }
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -110,6 +188,7 @@ public class MainActivity extends AppCompatActivity {
                 public void onSuccess(Location location) {
                     //we got permission.Put Values of location
                     updateUIValues(location);
+                    currentLocation = location;
 
                 }
             });
@@ -141,6 +220,21 @@ public class MainActivity extends AppCompatActivity {
         } else {
             tv_speed.setText("Not Available");
         }
+
+        Geocoder geocoder = new Geocoder((MainActivity.this));
+
+        try {
+            List <Address> addresses = geocoder.getFromLocation(location.getLatitude(),location.getLongitude(),1);
+            tv_address.setText(addresses.get(0).getAddressLine(0));
+        } catch (Exception e){
+            tv_address.setText("Unable to get street address");
+        }
+
+        MyApplication myApplication = (MyApplication)getApplicationContext();
+        savedLocations = myApplication.getMyLocations();
+
+        //show Number of Defibs saved
+        tv_noDefibs.setText(Integer.toString(savedLocations.size()));
 
 
     }
