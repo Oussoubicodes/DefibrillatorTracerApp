@@ -6,6 +6,7 @@ import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
@@ -35,11 +36,11 @@ public class MainActivity extends AppCompatActivity {
     private static final int FAST_UPDATE_INTERVAL = 5;
     private static final int PERMISSIONS_FINE_LOCATION = 99;
 
-    TextView tv_lat,tv_lon,tv_altitude,tv_accuracy,tv_speed,tv_sensor,tv_address,tv_updates,tv_noDefibs;
+    TextView tv_lat, tv_lon, tv_altitude, tv_accuracy, tv_speed, tv_sensor, tv_address, tv_updates, tv_noDefibs;
 
     Switch sw_locationupdates, sw_gps;
 
-    Button btn_newLocation,btn_showLocations;
+    Button btn_newLocation, btn_showLocations , btn_showMap;
 
     //API's for location service. Majority of features in app use this
     FusedLocationProviderClient fusedLocationProviderClient;
@@ -55,12 +56,14 @@ public class MainActivity extends AppCompatActivity {
 
     //Location request is a config file for all setting to FusedLocationProvider
 
-    Builder locationRequest;
+    private LocationRequest locationRequest;
+    private LocationRequest.Builder builder;
+
 
     LocationCallback locationCallBack;
 
 
-    @SuppressLint("SetTextI18n")
+    //@SuppressLint("SetTextI18n")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -79,14 +82,19 @@ public class MainActivity extends AppCompatActivity {
         btn_newLocation = findViewById(R.id.saveLocation);
         btn_showLocations = findViewById(R.id.showLocations);
         tv_noDefibs = findViewById(R.id.noDefibs);
+        btn_showMap = findViewById(R.id.btn_ShowMap);
 
         //set all properties of LocationRequest
 
         //Default Location Check Occurs every 30000ms
-        locationRequest = new LocationRequest.Builder(Priority.PRIORITY_BALANCED_POWER_ACCURACY, 1000 * DEFAULT_UPDATE_INTERVAL);
+        builder = new LocationRequest.Builder(DEFAULT_UPDATE_INTERVAL * 1000)
+                //Checks every 10000ms when set to the most frequent update
+                .setMinUpdateIntervalMillis(FAST_UPDATE_INTERVAL * 1000)
+                .setPriority(Priority.PRIORITY_BALANCED_POWER_ACCURACY);
+        locationRequest = builder.build();
 
         //Checks every 10000ms when set to the most frequent update
-        locationRequest.setMinUpdateIntervalMillis(1000 * FAST_UPDATE_INTERVAL);
+        // locationRequest.setMinUpdateIntervalMillis(1000 * FAST_UPDATE_INTERVAL);
 
         //Triggered whenever location update interval is met
         locationCallBack = new LocationCallback() {
@@ -102,23 +110,40 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // get the gps location
-                MyApplication myApplication = (MyApplication)getApplicationContext();
+                MyApplication myApplication = (MyApplication) getApplicationContext();
                 savedLocations = myApplication.getMyLocations();
                 savedLocations.add(currentLocation);
 
             }
         });
-        {
+
+       btn_showLocations.setOnClickListener(new View.OnClickListener() {
+           @Override
+           public void onClick(View v) {
+               Intent i = new Intent(MainActivity.this,showDefibLocationsList.class);
+               startActivity(i);
+           }
+       });
+
+       btn_showMap.setOnClickListener(new View.OnClickListener() {
+           @Override
+           public void onClick(View view) {
+               Intent i = new Intent(MainActivity.this,MapsActivity.class);
+               startActivity(i);
+           }
+       });{
 
         }
 
-        sw_gps.setOnClickListener(view -> {
+        sw_gps.setOnClickListener((View v) -> {
             if (sw_gps.isChecked()) {
                 //most accurate - use GPS
-                locationRequest.setPriority(Priority.PRIORITY_HIGH_ACCURACY);
+                builder.setPriority(Priority.PRIORITY_HIGH_ACCURACY);
+                locationRequest = builder.build();
                 tv_sensor.setText("Using GPS sensors");
             } else {
-                locationRequest.setPriority(Priority.PRIORITY_BALANCED_POWER_ACCURACY);
+                builder.setPriority(Priority.PRIORITY_BALANCED_POWER_ACCURACY);
+                locationRequest = builder.build();
                 tv_sensor.setText("Using Towers + WIFI");
             }
 
@@ -126,7 +151,7 @@ public class MainActivity extends AppCompatActivity {
             sw_locationupdates.setOnClickListener((new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if(sw_locationupdates.isChecked()){
+                    if (sw_locationupdates.isChecked()) {
                         startLocationUpdates();
                     } else {
                         stopLocationUpdates();
@@ -138,11 +163,15 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    @SuppressLint("MissingPermission")
     private void startLocationUpdates() {
         tv_updates.setText("Location is being tracked");
-        LocationServices.getFusedLocationProviderClient(getApplicationContext())
-                .requestLocationUpdates(locationRequest,locationCallBack, null);
+        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallBack, null);
         updateGPS();
+
+       /* LocationServices.getFusedLocationProviderClient(getApplicationContext())
+                .requestLocationUpdates(locationRequest, locationCallBack, null);
+        updateGPS();*/
     }
 
     private void stopLocationUpdates() {
@@ -204,7 +233,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //update text view values with new location
-    @SuppressLint("SetTextI18n")
+    //@SuppressLint("SetTextI18n")
     private void updateUIValues(Location location){
         tv_lat.setText(String.valueOf(location.getLatitude()));
         tv_lon.setText(String.valueOf(location.getLongitude()));
