@@ -8,6 +8,7 @@ import java.util.List;
 
 public class MyApplication extends Application {
 
+    //only one instance allowed
     private static MyApplication singleton;
 
     private List<Location> myLocations;
@@ -23,6 +24,7 @@ public class MyApplication extends Application {
     public MyApplication getInstance() {
         return singleton;
     }
+
 
     public void onCreate() {
         super.onCreate();

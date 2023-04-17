@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
 
     Switch sw_locationupdates, sw_gps;
 
-    Button btn_newLocation, btn_showLocations , btn_showMap;
+    Button btn_newLocation, btn_showLocations , btn_showMap , btn_help;
 
     //API's for location service. Majority of features in app use this
     FusedLocationProviderClient fusedLocationProviderClient;
@@ -83,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
         btn_showLocations = findViewById(R.id.showLocations);
         tv_noDefibs = findViewById(R.id.noDefibs);
         btn_showMap = findViewById(R.id.btn_ShowMap);
+        btn_help = findViewById(R.id.btn_help);
 
         //set all properties of LocationRequest
 
@@ -114,6 +115,14 @@ public class MainActivity extends AppCompatActivity {
                 savedLocations = myApplication.getMyLocations();
                 savedLocations.add(currentLocation);
 
+            }
+        });
+
+        btn_help.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent i = new Intent(MainActivity.this, HelpScreen.class);
+                startActivity(i);
             }
         });
 

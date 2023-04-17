@@ -16,7 +16,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.DefibrillatorTracker"
         tools:targetApi="31" >
-
+        <activity
+            android:name=".HelpScreen"
+            android:exported="false" />
+        <activity
+            android:name=".MainActivity"
+            android:exported="true" />
         <!--
              TODO: Before you run your application, you need a Google Maps API key.
 
@@ -30,7 +35,7 @@
         -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyDyTtA1Y_J9jHJOKOvtW9FzYbjWosvVGDw" />
+            android:value="AIzaSyAWhwU67Va7IV5Lss3NPUr23oL8YeaXm2M" />
 
         <activity
             android:name=".MapsActivity"
@@ -40,7 +45,7 @@
             android:name=".showDefibLocationsList"
             android:exported="false" />
         <activity
-            android:name=".MainActivity"
+            android:name=".Home"
             android:exported="true" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
